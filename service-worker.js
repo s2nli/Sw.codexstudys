@@ -1,5 +1,5 @@
-const CACHE_NAME = "codex-studys-shell-v18";
-const SHELL_FILES = ["./index.html", "./batch.html", "./app.js", "./profile.js", "./manifest.json", "./assets/selectionway-icon-192.png", "./assets/selectionway-icon-512.png", "./assets/icon-192.png"];
+const CACHE_NAME = "codex-studys-shell-v22";
+const SHELL_FILES = ["./index.html", "./batch.html", "./player.html", "./app.js", "./profile.js", "./ebooks.js", "./manifest.json", "./assets/selectionway-icon-192.png", "./assets/selectionway-icon-512.png", "./assets/icon-192.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -20,6 +20,8 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET" || url.origin !== self.location.origin) return;
+  // never cache video / proxy / range traffic (keeps playback fast and replayable)
+  if (url.pathname.startsWith("/api/") || event.request.headers.has("range") || event.request.destination === "video" || event.request.destination === "audio") return;
 
   // Network-first for page navigations so UI/logic updates (like the popups) land on the very next visit.
   if (event.request.mode === "navigate") {
@@ -52,7 +54,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Network-first for the app's own scripts so a new deploy is picked up immediately (cache only as offline fallback).
-  if (/\/(app|profile)\.js$/.test(url.pathname)) {
+  if (/\/(app|profile|ebooks)\.js$/.test(url.pathname)) {
     event.respondWith(
       fetch(event.request, { cache: "no-cache" })
         .then((response) => {
